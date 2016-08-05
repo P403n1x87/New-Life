@@ -1,0 +1,85 @@
+--[[
+This file is part of "New Life" which is released under GPL.
+See file LICENCE or go to http://www.gnu.org/licenses/ for full license
+details.
+
+New Life is a series of custom scripts for Conky, a system monitor, based on
+torsmo.
+
+Copyright (c) 2016 Gabriele N. Tornetta <phoenix1987@gmail.com>. All rights
+reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+]]
+
+conky.config = {
+	alignment = 'bottom_left',
+	background = true,
+
+	border_inner_margin = 0,
+	border_outer_margin = 0,
+
+	cpu_avg_samples = 2,
+	default_color = 'white',
+	default_outline_color = 'white',
+	default_shade_color = 'white',
+	draw_borders = false,
+	draw_shades = false,
+	use_xft = true,
+	font = 'Michroma:size=10',
+	gap_x = 12,
+	draw_graph_borders = false,
+	draw_outline = false,
+	gap_y = 48,
+	minimum_width = 480,
+	minimum_height = 240,
+	net_avg_samples = 2,
+
+	no_buffers = true,
+	double_buffer = true,
+
+	out_to_console = false,
+	out_to_stderr = false,
+	extra_newline = false,
+
+	own_window = true,
+	own_window_type = 'normal',
+	own_window_transparent = false,
+	own_window_hints = 'undecorated, below, sticky, skip_taskbar, skip_pager',
+	own_window_argb_visual = true,
+	own_window_argb_value = 0,
+
+	stippled_borders = 0,
+	update_interval = 2,
+	uppercase = false,
+	use_spacer = 'none',
+	show_graph_scale = false,
+	show_graph_range = false,
+	pad_percents = 1,
+
+	text_buffer_size = 2048,
+
+	lua_load = 'lua/mem.lua',
+	lua_draw_hook_pre = 'draw_pre'
+};
+
+conky.text = [[
+${voffset 80}
+${font Neuropol:size=10}${goto 270} PID ${goto 320} NAME ${goto 432}% MEM
+${font}
+${goto 270} ${top_mem pid 1} ${goto 320} ${top_mem name 1} ${goto 432} ${top_mem mem 1}
+${goto 270} ${top_mem pid 2} ${goto 320} ${top_mem name 2} ${goto 432} ${top_mem mem 2}
+${goto 270} ${top_mem pid 3} ${goto 320} ${top_mem name 3} ${goto 432} ${top_mem mem 3}
+${goto 270} ${top_mem pid 4} ${goto 320} ${top_mem name 4} ${goto 432} ${top_mem mem 4}
+${goto 270} ${top_mem pid 5} ${goto 320} ${top_mem name 5} ${goto 432} ${top_mem mem 5}
+]];

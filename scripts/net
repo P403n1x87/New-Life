@@ -1,0 +1,112 @@
+--[[
+This file is part of "New Life" which is released under GPL.
+See file LICENCE or go to http://www.gnu.org/licenses/ for full license
+details.
+
+New Life is a series of custom scripts for Conky, a system monitor, based on
+torsmo.
+
+Copyright (c) 2016 Gabriele N. Tornetta <phoenix1987@gmail.com>. All rights
+reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+]]
+
+conky.config = {
+	alignment = 'top_right',
+	background = true,
+
+	border_inner_margin = 0,
+	border_outer_margin = 0,
+
+	cpu_avg_samples = 2,
+	default_color = 'white',
+	default_outline_color = 'white',
+	default_shade_color = 'white',
+	draw_borders = false,
+	draw_shades = false,
+	use_xft = true,
+	font = 'Michroma:size=10',
+	gap_x = 12,
+	draw_graph_borders = false,
+	draw_outline = false,
+	gap_y = 100,
+	minimum_width = 320, minimum_height = 320,
+	net_avg_samples = 2,
+
+	no_buffers = true,
+	double_buffer = true,
+
+	out_to_console = false,
+	out_to_stderr = false,
+	extra_newline = false,
+
+	own_window = true,
+	own_window_type = 'normal',
+	own_window_transparent = false,
+	own_window_hints = 'undecorated, below, sticky, skip_taskbar, skip_pager',
+	own_window_argb_visual = true,
+	own_window_argb_value = 0,
+
+	stippled_borders = 0,
+	update_interval = 2,
+	uppercase = false,
+	use_spacer = 'none',
+	show_graph_scale = false,
+	show_graph_range = false,
+	pad_percents = 1,
+
+	text_buffer_size = 2048,
+
+--lua_load ~/Programming/conky/new_life/lua/net.lua
+--lua_draw_hook_pre draw_pre
+
+};
+
+conky.text = [[
+${font Michroma:size=12}${color gray}${alignc}Local IP
+${if_existing /proc/net/route wlan0}${font Michroma:size=14}${color}${alignc}${addr wlan0}
+
+${font Michroma:size=12}${color gray}${alignc}Public IP
+#${font Michroma:size=14}${color}${alignc}${exec curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'}
+${font Michroma:size=14}${color}${alignc}${exec wget http://ipinfo.io/ip -qO -}
+
+${font Michroma:size=12}${color gray}${alignc}Interface
+${font Michroma:size=14}${color}${alignc}WLAN0
+${font Michroma:size=12}
+${alignc}${downspeedgraph wlan0 48,280 0000A0 000040 2048 -t}
+${voffset 6}${alignc}${upspeedgraph wlan0 -48,280 f1db18 cbc544 512 -t}
+${voffset -90}${goto 22}${color grey}DOWNSPEED${color} ${alignr 22}${downspeed wlan0}
+${voffset 80}${goto 22}${color grey}UPSPEED${color} ${alignr 22}${upspeed wlan0}
+${font Michroma:size=10}
+${goto 80}ESSID${alignr 80}${wireless_essid wlan0}
+${goto 80}BIT RATE${alignr 80}${wireless_bitrate wlan0}
+${goto 80}QUALITY${alignr 80}${wireless_link_bar 8,64 wlan0}
+
+${else}${if_existing /proc/net/route eth0}${font Michroma:size=14}${color}${alignc}${addr eth0}
+
+${font Michroma:size=12}${color gray}${alignc}Public IP
+#${font Michroma:size=14}${color}${alignc}${exec curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//'}
+${font Michroma:size=14}${color}${alignc}${exec wget http://ipinfo.io/ip -qO -}
+
+${font Michroma:size=12}${color gray}${alignc}Interface
+${font Michroma:size=14}${color}${alignc}ETH0
+${font Michroma:size=12}
+${alignc}${downspeedgraph eth0 48,280 0000A0 000040 1024 -t}
+${voffset 6}${alignc}${upspeedgraph eth0 -48,280 f1db18 cbc544 1024 -t}
+${voffset -90}${goto 22}${color grey}DOWNSPEED${color} ${alignr 22}${downspeed eth0}
+${voffset 80}${goto 22}${color grey}UPSPEED${color} ${alignr 22}${upspeed eth0}
+${else}${alignc}No network
+${alignc}connection
+${endif}${endif}
+]];
