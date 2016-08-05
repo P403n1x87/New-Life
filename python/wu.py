@@ -35,13 +35,13 @@ import sys
 #
 
 # One of your currently active Wunderground API to perform requests with
-wu_api_key  = "b7fd61acde639743"
+wu_api_key  = ""
 
 # Country of the location forecast are to be requested for
-country     = "Italy"
+country     = "UK"
 
 # City/Town the forecast are to be requested for
-city        = "Piazza Armerina"
+city        = "Glasgow"
 
 # Features to be included in the json file, e.g.
 # features    = ["conditions", "forecast10day", "astronomy", "hourly", "satellite"]

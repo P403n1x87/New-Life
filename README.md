@@ -12,6 +12,8 @@ New Life comes with 6 highly customisable widgets for your desktop. The name of 
 
 **N.B.:** A file marked with "(conf)" holds the widget's configuration parameters.
 
+![alt text](new_life.png "Preview")
+
 #### CPU
 
 Files  
@@ -62,7 +64,7 @@ Displays current conditions relative to the currently specified location in `pyt
 
 ## How to Install
 
-New Life comes with a set of Conky, Lua and Python scripts, together with 4 free fonts (DJB Get Digital, Michroma, Neuropol and Weather Icons). The following installation instructions have been tested on Ubuntu 16.04 LTS using Python 2.7, Lua 5.2 and Conky 1.10.1.
+New Life comes with a set of Conky, Lua and Python scripts, together with 4 free fonts (DJB Get Digital, Michroma, Neuropol and Weather Icons, copyright to the respective authors). The following installation instructions have been tested on Ubuntu 16.04 LTS using Python 2.7, Lua 5.2 and Conky 1.10.1.
 
 New Life depends on
 * python >= 2.7
