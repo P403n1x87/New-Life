@@ -54,7 +54,7 @@ fs_used = 0
 fs_free = 0
 
 cx, cy = 180, 128
-offset_angle = 1/18
+offset_angle = 1/24
 
 --------------------------------------------------------------------------------
 -- Draw helpers ----------------------------------------------------------------
@@ -178,9 +178,10 @@ function draw_file_systems(cr)
         else
             cairo_set_source_rgba(cr, 0, .75, 0, 1)
             -- Increment free and total memory
-            fs_size = fs_size + tonumber( conky_parse("${to_bytes ${fs_size " .. fs[entry][1]  .. "}}") )
-            fs_used = fs_used + tonumber( conky_parse("${to_bytes ${fs_used " .. fs[entry][1]  .. "}}") )
-            fs_free = fs_free + tonumber( conky_parse("${exec df -P " .. fs[entry][1]  .. " | tail -1 | awk '{print $4}'}") )
+            fs_data = string.split( conky_parse("${exec bash -c 'read a b c d e _ < <(df -P " .. fs[entry][1]  .. " | tail -1); echo $b $c $d'}"), ' ')
+            fs_size = fs_size + tonumber( fs_data[1] )
+            fs_used = fs_used + tonumber( fs_data[2] )
+            fs_free = fs_free + tonumber( fs_data[3] )
         end
         if math.cos(2 * math.pi * angle) < 0 then d = -74 else d = 74 end
         if math.sin(2 * math.pi * angle) < 0 then s = 8 else s = -8 end

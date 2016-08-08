@@ -69,7 +69,7 @@ Displays current conditions relative to the currently specified location in `pyt
 New Life comes with a set of Conky, Lua and Python scripts, together with 4 free fonts (DJB Get Digital, Michroma, Neuropol and Weather Icons, copyright to the respective authors). The following installation instructions have been tested on Ubuntu 16.04 LTS using Python 2.7, Lua 5.2 and Conky 1.10.1.
 
 New Life depends on
-* python >= 2.7
+* python 2.7
 * conky >= 1.10
 * lua >= 5.0
 
@@ -147,6 +147,12 @@ There shouldn't be much to configure here as the purpose of this widget is to di
 #### Network
 
 Currently, this is a pure conky script widget. By default it only look for the interfaces `eth0` and `wlan0` (exclusively, in the sense that if `wlan0` is detected then `eth0` is ignored). If your interfaces have different name then you can just do a Find & Replace with your favourite text editor (also look for the uppercase `WLAN0` and `ETH0` labels and change them accordingly).
+
+Other changes that probably need to be done are the graph scales. These can be determined with, e.g., the value provided by speedtest.net. Conver them from Mbps to KBps with the formula
+~~~~
+KBps = 128 * Mbps
+~~~~
+and change the graph scales accordingly.
 
 #### Weather Underground
 
