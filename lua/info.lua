@@ -60,25 +60,28 @@ wu_paths = "sun_phase.sunrise.hour "..
 
 function draw_date_time(cr)
     -- Vertical separator
-    cairo_set_line_width(cr, 2)
-    draw_segment(cr, conky_window.width / 2, 60,
-                     conky_window.width / 2, 120)
+    cairo_set_line_width(cr, 1)
+    draw_segment(cr, conky_window.width / 2 - 64, 40,
+                     conky_window.width / 2 + 64, 40)
+
+    draw_segment(cr, conky_window.width / 2, 40,
+                     conky_window.width / 2, 130)
 
     -- Clock
-    cairo_set_font_size(cr, 64)
-    write_top_right(cr, w / 2 - 16, 116, conky_parse("${time %H:%M}") )
+    cairo_set_font_size(cr, 52)
+    write_bottom_right(cr, w / 2 - 16, 64, conky_parse("${time %H:%M}") )
 
     -- Weekday
-    cairo_set_font_size(cr, 12)
-    write_bottom_left(cr, w / 2 + 8, 58, conky_parse("${time %A}") )
+    cairo_set_font_size(cr, 10)
+    write_bottom_left(cr, w / 2 + 16, 58, conky_parse("${time %A}") )
 
     -- Date
-    cairo_set_font_size(cr, 32)
-    write_top_left(cr, w / 2 + 8, 98, conky_parse("${time %B %d}") )
+    cairo_set_font_size(cr, 24)
+    write_top_left(cr, w / 2 + 16, 90, conky_parse("${time %B %d}") )
 
     -- Year
-    cairo_set_font_size(cr, 14)
-    write_top_left(cr, w / 2 + 8, 118, conky_parse("${time %Y}") )
+    cairo_set_font_size(cr, 10)
+    write_top_left(cr, w / 2 + 16, 108, conky_parse("${time %Y}") )
 end
 
 --------------------------------------------------------------------------------
@@ -87,7 +90,7 @@ function draw_progress(cr)
     local W = 320
     local t = 3
     local r = 10/4
-    local y = 150
+    local y = 130
 
     data = conky_parse( "${exec python python/wu.py ".. wu_paths .. "}" )
     sun = string.split(data, "|")
@@ -135,7 +138,7 @@ end
 
 function draw_info(cr)
     local d = w / #info
-    local y = 250
+    local y = 226
     local s = 22
 
     for entry = 1, #info do

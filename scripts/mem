@@ -42,7 +42,7 @@ conky.config = {
 	draw_outline = false,
 	gap_y = 48,
 	minimum_width = 480,
-	minimum_height = 240,
+	minimum_height = 160,
 	net_avg_samples = 2,
 
 	no_buffers = true,
@@ -74,7 +74,7 @@ conky.config = {
 };
 
 conky.text = [[
-${voffset 80}
+${voffset 40}
 ${font Neuropol:size=10}${goto 270} PID ${goto 320} NAME ${goto 432}% MEM
 ${font}
 ${goto 270} ${top_mem pid 1} ${goto 320} ${top_mem name 1} ${goto 432} ${top_mem mem 1}

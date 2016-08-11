@@ -45,7 +45,7 @@ city        = "Glasgow"
 
 # Features to be included in the json file, e.g.
 # features    = ["conditions", "forecast10day", "astronomy", "hourly", "satellite"]
-features    = ["conditions", "forecast10day", "astronomy"]
+features    = ["conditions", "forecast10day", "astronomy", "hourly"]
 
 #
 # END Configuration Section
@@ -72,6 +72,7 @@ class Bunch():
                     i = 1
                     for e in l:
                         self.__dict__["%s%d" % (key, i)] = Bunch(e) if e.__class__ == {}.__class__ else e
+                        i += 1
 
     def __getattr__(self, name):
         return getattr(self.__dict__, name, None)

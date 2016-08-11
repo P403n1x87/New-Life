@@ -53,14 +53,17 @@ fs_size = 0
 fs_used = 0
 fs_free = 0
 
+-- Geometry
 cx, cy = 180, 128
 offset_angle = 1/24
+r = 54  -- Main ring radius. This controls the overall size
+t = 8   -- Main ring thickness
 
 --------------------------------------------------------------------------------
 -- Draw helpers ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-function draw_clock(cr)
+--[[function draw_clock(cr)
     cairo_select_font_face(cr, "DJB Get Digital", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
     cairo_set_font_size(cr, 36)
     cairo_set_source_rgba(cr, 0.4, .9, 0.4, 1)
@@ -82,28 +85,41 @@ function draw_clock(cr)
     cairo_arc (cr, cx, cy, 66, 0, 2 * math.pi);
     cairo_fill (cr);
     cairo_pattern_destroy (pat);
-end
+end]]
 
 --------------------------------------------------------------------------------
 
 function draw_middle(cr)
+    local R = r - 8
 
     -- Background disk
     cairo_set_source_rgba(cr, 1, 1, 1, .1)
-    cairo_arc (cr, cx, cy, 54, 0, 2 * math.pi);
+    cairo_arc (cr, cx, cy, R, 0, 2 * math.pi);
     cairo_fill (cr);
 
     -- Foreground fill
     h = fs_used / fs_size
 
     -- TODO: Change color according to fill %
-    cairo_set_source_rgba(cr, 1, 1, 1, .9)
+    pat = cairo_pattern_create_radial (cx - 20, cy - 20, r / 2,
+                                       cx + 20,  cy + 20, 2 * r);
+
+    if h > .95 then
+        cairo_pattern_add_color_stop_rgba (pat, 0, 1, 0.1, 0.1, 1);
+    elseif h > .85 then
+        cairo_pattern_add_color_stop_rgba (pat, 0, 0.85, 0.4, 0.05, 1)
+    else
+        cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, 1);
+    end
+    cairo_pattern_add_color_stop_rgba (pat, 1, 0.4, 0.4, 0.4, 1);
+    cairo_set_source (cr, pat);
+    --cairo_set_source_rgba(cr, 1, 1, 1, .9)
 
     cairo_save(cr)
     rotate(cr, -1/4)
 
     a = math.acos( 1 - h * 2 )
-    cairo_arc(cr, cx, cy, 54, -a, a)
+    cairo_arc(cr, cx, cy, R, -a, a)
     cairo_fill(cr)
 
     cairo_restore(cr)
@@ -118,20 +134,28 @@ function draw_middle(cr)
     end
     text = math.floor(free + .5) .. " " .. prefix[i] .. "B"
 
-    cairo_set_font_size(cr, 14)
+    cairo_set_font_size(cr, 12)
     if h <= .5 then -- write in the shaded area
-        d, s = (h - 1) * 54 + 8, (h - 1) * 54 - 8
+        d, s = (h - 1) * R + 8, (h - 1) * 54 - 8
     else -- write in the full area
-        cairo_set_source_rgba(cr, .2, .2, .2, 1)
-        d, s = h * 54 - 8, 8 + h * 54
+        if h <= .85 then
+            cairo_set_source_rgba(cr, .2, .2, .2, 1)
+        else
+            cairo_set_source_rgba(cr, 1, 1, 1, 1)
+        end
+        d, s = h * R - 8, 8 + h * R
     end
-    write_center_middle(cr, cx, cy + 54 * (1-2*h) + d, text)
-    write_center_middle(cr, cx, cy + 54 * (1-2*h) + s, "Free")
+    write_center_middle(cr, cx, cy + R * (1-2*h) + d, text)
+    write_center_middle(cr, cx, cy + R * (1-2*h) + s, "Free")
 end
 
 --------------------------------------------------------------------------------
 
 function draw_file_systems(cr)
+    local R = r + 14    -- Indicator arc radius
+    local l = 32        -- Radial line length
+    local L = 80        -- Horizontal line length
+
     fs_size = 0
     fs_used = 0
     fs_free = 0
@@ -145,16 +169,16 @@ function draw_file_systems(cr)
         cairo_save(cr)
         rotate(cr, angle)
         cairo_set_source_rgba(cr, 1, 1, 1, 0.2)
-        draw_arc(cr, cx, cy, 78, 4, -1 / #fs * 100 / 106, 0) -- 106 creates the gap
+        draw_arc(cr, cx, cy, R, 4, -1 / #fs * 100 / 106, 0) -- 106 creates gap
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
         if tonumber(perc) > 95 then
             cairo_set_source_rgba(cr, 1, 0.1, 0.1, 1)
         elseif tonumber(perc) > 85 then
             cairo_set_source_rgba(cr, 0.85, 0.4, 0.05, 1)
         end
-        draw_arc(cr, cx, cy, 78, 4, -perc / #fs / 106, 0)
+        draw_arc(cr, cx, cy, R, t / 2, -perc / #fs / 106, 0)
         cairo_set_line_width(cr, 1.5)
-        draw_segment(cr, cx + 70, cy, cx + 70 + 30, cy)
+        draw_segment(cr, cx + r, cy, cx + r + l, cy)
 
         cairo_restore(cr)
 
@@ -165,11 +189,12 @@ function draw_file_systems(cr)
         elseif tonumber(perc) > 85 then
             cairo_set_source_rgba(cr, 0.85, 0.4, 0.05, 1)
         end
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
-        draw_segment(cr, cx + 100 * math.cos(-2 * math.pi * angle),
-                         cy + 100 * math.sin(-2 * math.pi * angle),
-                         cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                         cy + 100 * math.sin(-2 * math.pi * angle))
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
+        local J = r + l
+        draw_segment(cr, cx + J * math.cos(-2 * math.pi * angle),
+                         cy + J * math.sin(-2 * math.pi * angle),
+                         cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                         cy + J * math.sin(-2 * math.pi * angle))
 
         -- Status Bullet
         unmounted = conky_parse("${fs_type " .. fs[entry][1]  .. "}") == "unknown"
@@ -183,10 +208,10 @@ function draw_file_systems(cr)
             fs_used = fs_used + tonumber( fs_data[2] )
             fs_free = fs_free + tonumber( fs_data[3] )
         end
-        if math.cos(2 * math.pi * angle) < 0 then d = -74 else d = 74 end
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
         if math.sin(2 * math.pi * angle) < 0 then s = 8 else s = -8 end
-        cairo_arc(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                      cy + 100 * math.sin(-2 * math.pi * angle) + s,
+        cairo_arc(cr, cx + J * math.cos(-2 * math.pi * angle) + d * (L - 6),
+                      cy + J * math.sin(-2 * math.pi * angle) + s,
                       4, 0, 2 * math.pi)
         cairo_fill(cr)
 
@@ -215,35 +240,35 @@ function draw_file_systems(cr)
             end
         end
 
-        if math.cos(2 * math.pi * angle) < 0 then d = -66 else d = 66 end
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
         if math.sin(2 * math.pi * angle) < 0 then s = 4 else s = -4 end
         cairo_set_font_size(cr, 10)
-        writer(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                   cy + 100 * math.sin(-2 * math.pi * angle) + s,
+        writer(cr, cx + J * math.cos(-2 * math.pi * angle) + d * (L - 14),
+                   cy + J * math.sin(-2 * math.pi * angle) + s,
                    fs[entry][2])
 
         -- Write the rest of the details
         cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
         cairo_set_font_size(cr, 8)
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
         if unmounted then text = "not mounted" else text = perc .. "%" end
-        writer_perc(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                        cy + 100 * math.sin(-2 * math.pi * angle) - s,
+        writer_perc(cr, cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                        cy + J * math.sin(-2 * math.pi * angle) - s,
                         text)
         if not unmounted then
-            writer_free(cr, cx + 100 * math.cos(-2 * math.pi * angle),
-                            cy + 100 * math.sin(-2 * math.pi * angle) - s,
+            writer_free(cr, cx + J * math.cos(-2 * math.pi * angle),
+                            cy + J * math.sin(-2 * math.pi * angle) - s,
                             conky_parse("${fs_free " .. fs[entry][1]  .. "}"))
         end
     end
 
     -- Main ring shadow
-    cairo_set_source_rgba(cr, 0.2, 0.2, 0.2, .2)
-    draw_arc(cr, cx, cy, 64, 14, 0, 1)
+    cairo_set_source_rgba(cr, 0.4, 0.4, 0.4, .1)
+    draw_arc(cr, cx, cy, r, 2 * t, 0, 1)
 
     -- Main ring
     cairo_set_source_rgba(cr, 1, 1, 1, 1)
-    draw_arc(cr, cx, cy, 64, 8, 0, 1)
+    draw_arc(cr, cx, cy, r, t, 0, 1)
 
 end
 

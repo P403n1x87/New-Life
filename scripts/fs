@@ -40,8 +40,8 @@ conky.config = {
 	draw_graph_borders = false,
 	draw_outline = false,
 	gap_y = 48,
-	minimum_width = 360, minimum_height = 240,
-	maximum_width = 360,
+	minimum_width = 340,
+	minimum_height = 230,
 	net_avg_samples = 2,
 
 	no_buffers = true,

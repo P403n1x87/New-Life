@@ -2,7 +2,7 @@
 
 New Life is a series of customisable scripts for Conky 1.10 and above, written by Gabriele N. Tornetta.
 
-The current stable release version is **1.0**.
+The current stable release version is **1.1**.
 
 Copyright © 2016 Gabriele N. Tornetta. All rights reserved.
 
@@ -172,5 +172,9 @@ In order for the widget to display updated weather conditions for the current lo
 0-59/15 * * * * python /path/to/python/wu.py -d
 ~~~~
 Replace `/path/to` with the actual path to the folder containing the `start.sh` script and save the buffer. This will update the json file, located at `/tmp/wu.json`, every 15 minutes. This value is chosen to be well within the limits of a free account with Wunderground. If you feel that you want more frequent updates then replace the `15` in `0-59/15` with any other number of minutes you like.
+
+
+Licence: GPLv3.
+
 
 [wunder]:http://www.wunderground.com

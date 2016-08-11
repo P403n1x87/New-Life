@@ -47,49 +47,72 @@ cores = 4
 
      Do not change unless you know what you're doing                          ]]
 
-cx, cy = 180, 128
+-- Geometry
+cx, cy = 180, 100
 offset_angle = 1/19
+r = 54  -- Main ring radius. This controls the overall size
+t = 8   -- Main ring thickness
 
 --------------------------------------------------------------------------------
 -- Draw helpers ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 function draw_middle(cr)
+    local R = r - 8
 
     -- Background disk
     cairo_set_source_rgba(cr, 1, 1, 1, .1)
-    cairo_arc (cr, cx, cy, 54, 0, 2 * math.pi);
+    cairo_arc (cr, cx, cy, R, 0, 2 * math.pi);
     cairo_fill (cr);
 
     -- Foreground fill
     perc = tonumber( conky_parse( "${cpu cpu0}" ) )
-    h = tonumber( conky_parse( "${cpu cpu0}" ) ) / 100
+    h = perc / 100
 
     -- TODO: Change color according to fill %
-    cairo_set_source_rgba(cr, 1, 1, 1, .9)
+    pat = cairo_pattern_create_radial (cx - 20, cy - 20, r / 2,
+                                       cx + 20,  cy + 20, 2 * r);
+
+    if h > .95 then
+        cairo_pattern_add_color_stop_rgba (pat, 0, 1, 0.1, 0.1, 1);
+    elseif h > .85 then
+        cairo_pattern_add_color_stop_rgba (pat, 0, 0.85, 0.4, 0.05, 1)
+    else
+        cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, 1);
+    end
+    cairo_pattern_add_color_stop_rgba (pat, 1, 0.4, 0.4, 0.4, 1);
+    cairo_set_source (cr, pat);
 
     cairo_save(cr)
     rotate(cr, -1/4)
 
     a = math.acos( 1 - h * 2 )
-    cairo_arc(cr, cx, cy, 54, -a, a)
+    cairo_arc(cr, cx, cy, R, -a, a)
     cairo_fill(cr)
 
     cairo_restore(cr)
 
-    cairo_set_font_size(cr, 18)
+    cairo_set_font_size(cr, 16)
     if h <= .5 then -- write in the shaded area
-        d, s = (h - 1) * 54 + 8, (h - 1) * 54 - 8
+        d = (h - 1) * R
     else -- write in the full area
-        cairo_set_source_rgba(cr, .2, .2, .2, 1)
-        d, s = h * 54 - 8, 8 + h * 54
+        if h <= .85 then
+            cairo_set_source_rgba(cr, .2, .2, .2, 1)
+        else
+            cairo_set_source_rgba(cr, 1, 1, 1, 1)
+        end
+        d = h * R
     end
-    write_center_middle(cr, cx, cy + 54 * (1-2*h) + d, perc .. "%")
+    write_center_middle(cr, cx, cy + R * (1-2*h) + d, perc .. "%")
 end
 
 --------------------------------------------------------------------------------
 
 function draw_cpu(cr)
+    local R = r + 14    -- Indicator arc radius
+    local l = 32        -- Radial line length
+    local L = 80        -- Horizontal line length
+
     for entry = 1, cores do
         perc = conky_parse("${cpu cpu" .. entry .. "}")
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
@@ -100,17 +123,17 @@ function draw_cpu(cr)
         cairo_save(cr)
         rotate(cr, angle)
         cairo_set_source_rgba(cr, 1, 1, 1, 0.2)
-        draw_arc(cr, cx, cy, 78, 4, -1 / cores * 100 / 106, 0) -- 106 creates the gap
+        draw_arc(cr, cx, cy, R, 4, -1 / cores * 100 / 106, 0) -- 106 creates the gap
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
         if tonumber(perc) > 95 then
             cairo_set_source_rgba(cr, 1, 0.1, 0.1, 1)
         elseif tonumber(perc) > 85 then
             cairo_set_source_rgba(cr, 0.85, 0.4, 0.05, 1)
         end
-        draw_arc(cr, cx, cy, 78, 4, -perc / cores / 106, 0)
+        draw_arc(cr, cx, cy, R, t / 2, -perc / cores / 106, 0)
 
         cairo_set_line_width(cr, 1.5)
-        draw_segment(cr, cx + 70, cy, cx + 70 + 30, cy)
+        draw_segment(cr, cx + r, cy, cx + r + l, cy)
 
         cairo_restore(cr)
 
@@ -121,11 +144,12 @@ function draw_cpu(cr)
             cairo_set_source_rgba(cr, 0.85, 0.4, 0.05, 1)
         end
         cairo_set_line_width(cr, 1.5)
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
-        draw_segment(cr, cx + 100 * math.cos(-2 * math.pi * angle),
-                         cy + 100 * math.sin(-2 * math.pi * angle),
-                         cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                         cy + 100 * math.sin(-2 * math.pi * angle))
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
+        local J = r + l
+        draw_segment(cr, cx + J * math.cos(-2 * math.pi * angle),
+                         cy + J * math.sin(-2 * math.pi * angle),
+                         cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                         cy + J * math.sin(-2 * math.pi * angle))
         -- Cpu label
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
         if math.cos(2 * math.pi * angle) > 0 then -- Select RIGHT
@@ -150,28 +174,27 @@ function draw_cpu(cr)
             end
         end
 
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
         if math.sin(2 * math.pi * angle) < 0 then s = 4 else s = -4 end
         cairo_set_font_size(cr, 12)
-        writer(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                   cy + 100 * math.sin(-2 * math.pi * angle) + s,
+        writer(cr, cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                   cy + J * math.sin(-2 * math.pi * angle) + s,
                    "CORE " .. entry)
 
         -- Write the rest of the details
         cairo_set_font_size(cr, 8)
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
-        writer_perc(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                        cy + 100 * math.sin(-2 * math.pi * angle) - s,
+        writer_perc(cr, cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                        cy + J * math.sin(-2 * math.pi * angle) - s,
                         perc .. "%")
     end
 
     -- Main ring shadow
     cairo_set_source_rgba(cr, 0.2, 0.2, 0.2, .1)
-    draw_arc(cr, cx, cy, 64, 14, 0, 1)
+    draw_arc(cr, cx, cy, r, t, 0, 1)
 
     -- Main ring
     cairo_set_source_rgba(cr, 1, 1, 1, 1)
-    draw_arc(cr, cx, cy, 64, 8, 0, 1)
+    draw_arc(cr, cx, cy, r, t, 0, 1)
 
 end
 

@@ -39,8 +39,8 @@ days = 2
 
      Do not change unless you know what you're doing                          ]]
 
-w = 360 --conky_window.width
-h = 260
+w = 310 --conky_window.width
+h = 320
 
 wu_paths = "current_observation.display_location.full " ..
            "current_observation.observation_time " ..
@@ -49,7 +49,9 @@ wu_paths = "current_observation.display_location.full " ..
            "current_observation.relative_humidity " ..
            "current_observation.wind_kph " ..
            "current_observation.pressure_mb " ..
-           "current_observation.icon"
+           "current_observation.icon " ..
+           "hourly_forecast " ..
+           "forecast.simpleforecast.forecastday"
 
 icon_lookup = {
     chancerain      = "",
@@ -61,7 +63,8 @@ icon_lookup = {
     mostlycloudy    = "",
     nt_mostlycloudy = "",
     rain            = "",
-    nt_rain         = ""
+    nt_rain         = "",
+    cloudy          = ""
 } -- see http://unitid.nl/iconfonts/?font=weathericons&size=big for more
 
 data = nil
@@ -70,11 +73,96 @@ data = nil
 -- Draw helpers ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+function retrieve_data(paths)
+    return conky_parse( "${exec python python/wu.py " .. paths .. "}" )
+end
+
+function draw_hourly(cr)
+    local y = 170
+    local hours = math.min(5, data[9])
+    local d = w / hours
+    local paths_postfix = {".FCTTIME.hour ",
+                           ".FCTTIME.min ",
+                           ".temp.metric ",
+                           ".icon ",
+                           ".pop "}
+
+    wu_hourly = ""
+    for i = 1, hours do
+        for j = 1, #paths_postfix do
+            wu_hourly = wu_hourly .. "hourly_forecast" .. i .. paths_postfix[j]
+        end
+    end
+    hdata = string.split(retrieve_data(wu_hourly), "|")
+
+    for i = 1, hours do
+        x = d * (i - 0.5)
+        k = 5 * (i-1)
+
+        cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        cairo_set_font_size(cr, 8)
+        write_center_middle(cr, x, y, hdata[k + 1] .. ":" .. hdata[k + 2])
+
+        write_top_left(cr, x - d / 2 + 12, y + 54, "P")
+        write_top_left(cr, x - d / 2 + 12, y + 64, "T")
+
+        cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        write_top_right(cr, x + d / 2 - 12, y + 54, hdata[k+5].."%")
+        write_top_right(cr, x + d / 2 - 12, y + 64, hdata[k+3].."°C")
+
+
+        cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        cairo_set_font_size(cr, 24)
+        write_center_middle(cr, x, y + 20, icon_lookup[hdata[k + 4]])
+    end
+end
+
+--------------------------------------------------------------------------------
+
+function draw_days(cr)
+    local y = 264
+    local hours = math.min(4, data[10]) - 1
+    local d = w / hours
+    local paths_postfix = {".date.weekday_short ",
+                           ".high.celsius ",
+                           ".low.celsius ",
+                           ".icon "}
+
+    wu_hourly = ""
+    for i = 1, hours do
+        for j = 1, #paths_postfix do
+            wu_hourly = wu_hourly .. "forecast.simpleforecast.forecastday" .. i+1 .. paths_postfix[j]
+        end
+    end
+    hdata = string.split(retrieve_data(wu_hourly), "|")
+    for i = 1, hours do
+        x = d * (i - 0.5)
+        k = 4 * (i-1)
+
+        cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        cairo_set_font_size(cr, 17)
+        write_top_left(cr, x - d / 2 + 8, y, hdata[k + 1])
+
+        cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        cairo_set_font_size(cr, 10)
+        write_top_left(cr, x - d / 2 + 8, y + 20, hdata[k+2].."°C")
+        write_top_left(cr, x - d / 2 + 8, y + 32, hdata[k+3].."°C")
+
+
+        cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+        cairo_set_font_size(cr, 32)
+        write_center_middle(cr, x + d / 7, y+12, icon_lookup[hdata[k + 4]])
+    end
+end
+
+
+--------------------------------------------------------------------------------
+
 function draw_current_cond(cr)
-    local ix, iy = 64, 74
-    local iw, ih = 112, 112
-    local rx = ix + iw / 2 + 172
-    local lx = ix + iw / 2 + 16
+    local ix, iy = 56, 56
+    local iw, ih = 112, 140
+    local rx = ix + iw / 2 + 192
+    local lx = ix + iw / 2 + 24
 
     if icon_lookup[data[8]] == nil then
         write_center_middle(cr, ix, iy, data[8])
@@ -83,20 +171,25 @@ function draw_current_cond(cr)
         cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
 
         -- Current condition icon
-        cairo_set_font_size(cr, 82)
+        cairo_set_font_size(cr, 76)
         write_center_middle(cr, ix, iy, icon_lookup[data[8]])
+        --write_center_middle(cr, ix, iy, "")
+
+        -- Thermometer icon
+        cairo_set_font_size(cr, 32)
+        write_bottom_left(cr, lx, 30, "")
     end
 
     -- The text
     cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
 
     -- Location
-    cairo_set_font_size(cr, 18)
+    cairo_set_font_size(cr, 14)
     write_bottom_left(cr, 0, 0, data[1])
 
     -- Current temperature
-    cairo_set_font_size(cr, 46)
-    write_bottom_right(cr, rx, 36, math.floor(tonumber(data[4]) + .5) .. "˚C")
+    cairo_set_font_size(cr, 36)
+    write_bottom_right(cr, rx, 30, math.floor(tonumber(data[4]) + .5) .. "˚C")
 
     -- Current condition text
     cairo_set_font_size(cr, 10)
@@ -152,10 +245,13 @@ function conky_draw_pre()
     cairo_set_source_rgba(cr, 1, 1, 1, .85)
 
     -- temp = conky_parse( "${exec python " .. script_path() .. "../python/wu.py " .. wu_paths .. "}" )
-    temp = conky_parse( "${exec python python/wu.py " .. wu_paths .. "}" )
+    temp = retrieve_data(wu_paths)
+    --temp = conky_parse( "${exec python python/wu.py " .. wu_paths .. "}" )
     data = string.split(temp, "|")
 
     draw_current_cond(cr)
+    draw_hourly(cr)
+    draw_days(cr)
 
     -- Memory clean-up
     cairo_destroy(cr)

@@ -41,7 +41,8 @@ conky.config = {
 	draw_graph_borders = false,
 	draw_outline = false,
 	gap_y = 64,
-	minimum_width = 360, minimum_height = 320,
+	minimum_width = 360,
+	minimum_height = 300,
 	net_avg_samples = 2,
 
 	no_buffers = true,
@@ -74,7 +75,7 @@ conky.config = {
 };
 
 conky.text = [[
-${voffset 240}
+${voffset 204}
 ${font Neuropol:size=10}${goto 20} PID ${goto 80} NAME ${goto 200}% CPU
 ${font}
 ${goto 20} ${top pid 1} ${goto 80} ${top name 1} ${goto 200} ${top cpu 1}

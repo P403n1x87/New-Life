@@ -44,16 +44,21 @@ mem = {
 
      Do not change unless you know what you're doing                          ]]
 
-cx, cy = 180, 128
+-- Geometry
+cx, cy = 180, 80
 offset_angle = 1/10
+r = 54  -- Main ring radius. This controls the overall size
+t = 8   -- Main ring thickness
 
 --------------------------------------------------------------------------------
 -- Draw helpers ----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 function draw_dial(cr)
+    local R = r - t / 2
+
     cairo_select_font_face(cr, "DJB Get Digital", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
-    cairo_set_font_size(cr, 20)
+    cairo_set_font_size(cr, 18)
     cairo_set_source_rgba(cr, 1, 1, 1, 1)
     write_center_middle(cr, cx, cy - 16, "R:" .. conky_parse("$memmax}"))
     write_center_middle(cr, cx, cy + 16, "S:" .. conky_parse("$swapmax}"))
@@ -63,13 +68,18 @@ function draw_dial(cr)
     cairo_pattern_add_color_stop_rgba (pat, 0, 1, 1, 1, .2);
     cairo_pattern_add_color_stop_rgba (pat, 1, 0, 0, 0, .2);
     cairo_set_source (cr, pat);
-    cairo_arc (cr, cx, cy, 66, 0, 2 * math.pi);
+    cairo_arc (cr, cx, cy, R, 0, 2 * math.pi);
     cairo_fill (cr);
     cairo_pattern_destroy (pat);
 end
 
+--------------------------------------------------------------------------------
 
 function draw_memory(cr)
+    local R = r + 14    -- Indicator arc radius
+    local l = 32        -- Radial line length
+    local L = 80        -- Horizontal line length
+
     for entry = 1, #mem do
         perc = conky_parse("${" .. mem[entry][1] .. "perc}")
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
@@ -86,22 +96,29 @@ function draw_memory(cr)
         cairo_save(cr)
         rotate(cr, angle)
         cairo_set_source_rgba(cr, 1, 1, 1, 0.2)
-        draw_arc(cr, cx, cy, 78, 4, -1 / #mem * 100 / 106, 0) -- 106 creates the gap
+        draw_arc(cr, cx, cy, R, 4, -1 / #mem * 100 / 106, 0) -- 106 creates gap
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
-        draw_arc(cr, cx, cy, 78, 4, -perc / #mem / 106, 0)
+        draw_arc(cr, cx, cy, R, 4, -perc / #mem / 106, 0)
 
         cairo_set_line_width(cr, 1.5)
-        draw_segment(cr, cx + 70, cy, cx + 70 + 30, cy)
+        draw_segment(cr, cx + r, cy, cx + r + l, cy)
 
         cairo_restore(cr)
 
         -- Horizontal line
+        if tonumber(perc) > 95 then
+            cairo_set_source_rgba(cr, 1, 0.1, 0.1, 1)
+        elseif tonumber(perc) > 85 then
+            cairo_set_source_rgba(cr, 0.85, 0.4, 0.05, 1)
+        end
         cairo_set_line_width(cr, 1.5)
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
-        draw_segment(cr, cx + 100 * math.cos(-2 * math.pi * angle),
-                         cy + 100 * math.sin(-2 * math.pi * angle),
-                         cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                         cy + 100 * math.sin(-2 * math.pi * angle))
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
+        local J = r + l
+        draw_segment(cr, cx + J * math.cos(-2 * math.pi * angle),
+                         cy + J * math.sin(-2 * math.pi * angle),
+                         cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                         cy + J * math.sin(-2 * math.pi * angle))
+
         -- Memory label
         cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD)
         cairo_set_source_rgba(cr, 1, 1, 1, 1)
@@ -127,34 +144,33 @@ function draw_memory(cr)
             end
         end
 
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
         if math.sin(2 * math.pi * angle) < 0 then s = 4 else s = -4 end
-        cairo_set_font_size(cr, 12)
-        writer(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                   cy + 100 * math.sin(-2 * math.pi * angle) + s,
+        cairo_set_font_size(cr, 10)
+        writer(cr, cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                   cy + J * math.sin(-2 * math.pi * angle) + s,
                    mem[entry][2])
 
         -- Write the rest of the details
         cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
         cairo_set_font_size(cr, 8)
-        if math.cos(2 * math.pi * angle) < 0 then d = -80 else d = 80 end
-        writer_perc(cr, cx + 100 * math.cos(-2 * math.pi * angle) + d,
-                        cy + 100 * math.sin(-2 * math.pi * angle) - s,
+        if math.cos(2 * math.pi * angle) < 0 then d = -1 else d = 1 end
+        writer_perc(cr, cx + J * math.cos(-2 * math.pi * angle) + d * L,
+                        cy + J * math.sin(-2 * math.pi * angle) - s,
                         perc .. "%")
-        if not unmounted then
-            writer_free(cr, cx + 100 * math.cos(-2 * math.pi * angle),
-                            cy + 100 * math.sin(-2 * math.pi * angle) - s,
-                            conky_parse("${" .. mem[entry][1] .. "free}"))
-        end
+
+        writer_free(cr, cx + J * math.cos(-2 * math.pi * angle),
+                        cy + J * math.sin(-2 * math.pi * angle) - s,
+                        conky_parse("${" .. mem[entry][1] .. "free}"))
     end
 
     -- Main ring shadow
-    cairo_set_source_rgba(cr, 0.2, 0.2, 0.2, .1)
-    draw_arc(cr, cx, cy, 64, 14, 0, 1)
+    cairo_set_source_rgba(cr, 0.4, 0.4, 0.4, .1)
+    draw_arc(cr, cx, cy, r, 2 * t, 0, 1)
 
     -- Main ring
     cairo_set_source_rgba(cr, 1, 1, 1, 1)
-    draw_arc(cr, cx, cy, 64, 8, 0, 1)
+    draw_arc(cr, cx, cy, r, t, 0, 1)
 
 end
 
