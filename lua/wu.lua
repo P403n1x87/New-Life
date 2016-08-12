@@ -78,7 +78,7 @@ function retrieve_data(paths)
 end
 
 function draw_hourly(cr)
-    local y = 170
+    local y = 160
     local hours = math.min(5, data[9])
     local d = w / hours
     local paths_postfix = {".FCTTIME.hour ",
@@ -94,7 +94,7 @@ function draw_hourly(cr)
         end
     end
     hdata = string.split(retrieve_data(wu_hourly), "|")
-
+    cairo_set_source_rgba(cr, 1, 1, 1, .67)
     for i = 1, hours do
         x = d * (i - 0.5)
         k = 5 * (i-1)
@@ -120,7 +120,7 @@ end
 --------------------------------------------------------------------------------
 
 function draw_days(cr)
-    local y = 264
+    local y = 240
     local hours = math.min(4, data[10]) - 1
     local d = w / hours
     local paths_postfix = {".date.weekday_short ",
@@ -134,24 +134,26 @@ function draw_days(cr)
             wu_hourly = wu_hourly .. "forecast.simpleforecast.forecastday" .. i+1 .. paths_postfix[j]
         end
     end
+
+    cairo_set_source_rgba(cr, 1, 1, 1, 1)
     hdata = string.split(retrieve_data(wu_hourly), "|")
     for i = 1, hours do
         x = d * (i - 0.5)
         k = 4 * (i-1)
 
         cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
-        cairo_set_font_size(cr, 17)
-        write_top_left(cr, x - d / 2 + 8, y, hdata[k + 1])
+        cairo_set_font_size(cr, 14)
+        write_center_middle(cr, x, y, hdata[k + 1])
 
         cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
         cairo_set_font_size(cr, 10)
-        write_top_left(cr, x - d / 2 + 8, y + 20, hdata[k+2].."°C")
-        write_top_left(cr, x - d / 2 + 8, y + 32, hdata[k+3].."°C")
+        write_top_right(cr, x - 4, y + 64, hdata[k+3].."°C")
+        write_top_left(cr, x + 4, y + 64, hdata[k+2].."°C")
 
 
         cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
-        cairo_set_font_size(cr, 32)
-        write_center_middle(cr, x + d / 7, y+12, icon_lookup[hdata[k + 4]])
+        cairo_set_font_size(cr, 28)
+        write_center_middle(cr, x, y+24, icon_lookup[hdata[k + 4]])
     end
 end
 
@@ -185,7 +187,7 @@ function draw_current_cond(cr)
 
     -- Location
     cairo_set_font_size(cr, 14)
-    write_bottom_left(cr, 0, 0, data[1])
+    write_bottom_right(cr, rx, 0, data[1])
 
     -- Current temperature
     cairo_set_font_size(cr, 36)
@@ -242,7 +244,7 @@ function conky_draw_pre()
 
     -- The actual script goes here
     --cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
-    cairo_set_source_rgba(cr, 1, 1, 1, .85)
+    cairo_set_source_rgba(cr, 1, 1, 1, 1)
 
     -- temp = conky_parse( "${exec python " .. script_path() .. "../python/wu.py " .. wu_paths .. "}" )
     temp = retrieve_data(wu_paths)
