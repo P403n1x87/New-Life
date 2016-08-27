@@ -28,8 +28,11 @@ require 'lua.common'
 -- CONFIGURATION Section -------------------------------------------------------
 --------------------------------------------------------------------------------
 
---[[ Not implemented yet ]]
-days = 2
+-- Number of forecast days to display
+days = 4
+
+-- Number of forcast hours from current time to display
+hours = 6
 
 --------------------------------------------------------------------------------
 -- END of CONFIGURATION Section ------------------------------------------------
@@ -79,8 +82,8 @@ end
 
 function draw_hourly(cr)
     local y = 160
-    local hours = math.min(5, data[9])
-    local d = w / hours
+    local hrs = math.min(hours, data[9])
+    local d = w / hrs
     local paths_postfix = {".FCTTIME.hour ",
                            ".FCTTIME.min ",
                            ".temp.metric ",
@@ -88,29 +91,34 @@ function draw_hourly(cr)
                            ".pop "}
 
     wu_hourly = ""
-    for i = 1, hours do
+    for i = 1, hrs do
         for j = 1, #paths_postfix do
             wu_hourly = wu_hourly .. "hourly_forecast" .. i .. paths_postfix[j]
         end
     end
     hdata = string.split(retrieve_data(wu_hourly), "|")
-    cairo_set_source_rgba(cr, 1, 1, 1, .67)
-    for i = 1, hours do
+    for i = 1, hrs do
         x = d * (i - 0.5)
         k = 5 * (i-1)
 
+        cairo_set_source_rgba(cr, 1, 1, 1, .67)
         cairo_select_font_face(cr, "Michroma", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
         cairo_set_font_size(cr, 8)
         write_center_middle(cr, x, y, hdata[k + 1] .. ":" .. hdata[k + 2])
 
-        write_top_left(cr, x - d / 2 + 12, y + 54, "P")
-        write_top_left(cr, x - d / 2 + 12, y + 64, "T")
+        local s = 19
+        write_top_left(cr, x - s, y + 54, "P")
+        write_top_left(cr, x - s, y + 64, "T")
 
         cairo_select_font_face(cr, "Neuropol", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
-        write_top_right(cr, x + d / 2 - 12, y + 54, hdata[k+5].."%")
-        write_top_right(cr, x + d / 2 - 12, y + 64, hdata[k+3].."°C")
+        write_top_right(cr, x + s, y + 54, hdata[k+5].."%")
+        write_top_right(cr, x + s, y + 64, hdata[k+3].."°C")
 
-
+        if tonumber(hdata[k+5]) > 95 then
+            cairo_set_source_rgba(cr, 1, 0.4, 0.4, .67)
+        elseif tonumber(hdata[k+5]) > 85 then
+            cairo_set_source_rgba(cr, 0.85, 0.6, 0.25, .67)
+        end
         cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
         cairo_set_font_size(cr, 24)
         write_center_middle(cr, x, y + 20, icon_lookup[hdata[k + 4]])
@@ -121,15 +129,15 @@ end
 
 function draw_days(cr)
     local y = 240
-    local hours = math.min(4, data[10]) - 1
-    local d = w / hours
+    local days = math.min(days + 1, data[10]) - 1
+    local d = w / days
     local paths_postfix = {".date.weekday_short ",
                            ".high.celsius ",
                            ".low.celsius ",
                            ".icon "}
 
     wu_hourly = ""
-    for i = 1, hours do
+    for i = 1, days do
         for j = 1, #paths_postfix do
             wu_hourly = wu_hourly .. "forecast.simpleforecast.forecastday" .. i+1 .. paths_postfix[j]
         end
@@ -137,7 +145,7 @@ function draw_days(cr)
 
     cairo_set_source_rgba(cr, 1, 1, 1, 1)
     hdata = string.split(retrieve_data(wu_hourly), "|")
-    for i = 1, hours do
+    for i = 1, days do
         x = d * (i - 0.5)
         k = 4 * (i-1)
 

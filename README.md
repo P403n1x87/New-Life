@@ -2,7 +2,7 @@
 
 New Life is a series of customisable scripts for Conky 1.10 and above, written by Gabriele N. Tornetta.
 
-The current stable release version is **1.1**.
+The current stable release version is **1.2**.
 
 Copyright © 2016 Gabriele N. Tornetta. All rights reserved.
 

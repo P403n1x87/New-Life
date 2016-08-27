@@ -60,7 +60,7 @@ conky.config = {
 	own_window_argb_value = 0,
 
 	stippled_borders = 0,
-	update_interval = 30,
+	update_interval = 2,
 	uppercase = false,
 	use_spacer = 'none',
 	show_graph_scale = false,

@@ -54,6 +54,9 @@ wu_paths = "sun_phase.sunrise.hour "..
            "sun_phase.sunset.hour " ..
            "sun_phase.sunset.minute"
 
+i_sunset  = ""
+i_sunrise = ""
+
 --------------------------------------------------------------------------------
 -- Draw helpers ----------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -88,7 +91,7 @@ end
 
 function draw_progress(cr)
     local W = 320
-    local t = 3
+    local t = 2
     local r = 10/4
     local y = 130
 
@@ -103,22 +106,13 @@ function draw_progress(cr)
     cairo_set_source_rgba(cr, 1, 1, 1, .2)
     cairo_rectangle(cr, (w - W) / 2, y, W, t)
     cairo_arc(cr, (w + W) / 2, y + t / 2, t / 2, -math.pi / 2, math.pi / 2)
-    cairo_arc(cr, (w - W) / 2 + W * sunrise, y + t / 2, t*r, 0, math.pi * 2)
-    cairo_arc(cr, (w - W) / 2 + W * sunset, y + t / 2, t*r, 0, math.pi * 2)
     cairo_fill(cr)
 
     -- Fill
     cairo_set_source_rgba(cr, 1, 1, 1, .8)
     cairo_arc(cr, (w - W) / 2, y + t / 2, t / 2, math.pi / 2, 3 / 2 * math.pi)
     cairo_rectangle(cr, (w - W) / 2, y, W * now, t)
-    cairo_fill(cr)
-
-    cairo_set_source_rgba(cr, 1, 1, 1, 1)
-    a = math.acos( math.min( math.max(-1, (sunrise - now) * W / t), 1 ) )
-    cairo_arc(cr, (w - W) / 2 + W * sunrise, y + t / 2, t*r, math.pi - a, math.pi + a)
-    --cairo_fill(cr)
-    a = math.acos( math.min( math.max(-1, (sunset - now) * W / t), 1 ) )
-    cairo_arc(cr, (w - W) / 2 + W * sunset, y + t / 2, t*r, math.pi - a, math.pi + a)
+    cairo_arc(cr, (w - W) / 2 + W * now, y + t / 2, t / 2, -math.pi / 2, 1 / 2 * math.pi)
     cairo_fill(cr)
 
     -- Times
@@ -127,11 +121,20 @@ function draw_progress(cr)
     write_center_middle(cr, (w - W) / 2 + W * sunset, y + 2.5 * t *r, sun[3] .. ":" .. sun[4])
 
     -- Icons
-    cairo_set_source_rgba(cr, .1, .1, .1, 1)
-    cairo_arc(cr, (w - W) / 2 + W * sunrise, y + t/2  , t * 2/3 * r, -math.pi, 0)
+    local h = 4
+    cairo_select_font_face(cr, "Weather Icons", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL)
+    cairo_set_font_size(cr, 12)
+    cairo_set_source_rgba(cr, 1, 1, 1, now > sunset and 1 or .2)
+
+    cairo_rectangle(cr, (w - W) / 2 + W * sunset, y + t/2 - h, 1, 2 * h)
     cairo_fill(cr)
-    cairo_arc(cr, (w - W) / 2 + W * sunset, y + t / 2 , t * 2/3 * r, 0, math.pi)
+    write_center_middle(cr, (w - W) / 2 + W * sunset + 1, y - h - 8, i_sunset)
+    if now > sunrise then
+        cairo_set_source_rgba(cr, 1, 1, 1, 1)
+    end
+    cairo_rectangle(cr, (w - W) / 2 + W * sunrise, y + t/2 - h, 1, 2 * h)
     cairo_fill(cr)
+    write_center_middle(cr, (w - W) / 2 + W * sunrise + 1, y - h - 8, i_sunrise)
 end
 
 --------------------------------------------------------------------------------
